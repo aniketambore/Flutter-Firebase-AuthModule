@@ -17,6 +17,8 @@
 - [Wrap Up](#wrap-up)
 - [Error](#error)
 
+# Overview
+![](readme_content/screencast.gif)
 
 # Firebase Project Configuration
 ## Installation

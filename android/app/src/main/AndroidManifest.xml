@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.aniket.flutter_auth.flutter_auth_example">
+    package="com.example.flutter_auth_example">
    <application
         android:label="flutter_auth_example"
         android:icon="@mipmap/ic_launcher">

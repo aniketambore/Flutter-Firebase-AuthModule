@@ -1,53 +1,39 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_auth_example/pages/auth_screen_view.dart';
-import 'package:flutter_auth_example/pages/home_page.dart';
-import 'package:flutter_auth_example/pages/login_page.dart';
-import 'package:flutter_auth_example/services/authentication_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_auth_example/pages/landing_page.dart';
+import 'package:flutter_auth_example/services/auth.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(MyApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  const MyApp({Key? key}) : super(key: key);
+
+  ThemeData _buildAppTheme() {
+    final ThemeData base = ThemeData.dark();
+    return base.copyWith(
+        brightness: Brightness.dark,
+        textTheme: const TextTheme(
+            headline1: TextStyle(fontSize: 72, fontWeight: FontWeight.bold),
+            bodyText1: TextStyle(fontSize: 18.0)));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        Provider<AuthenticationService>(
-          create: (_) => AuthenticationService(FirebaseAuth.instance),
-        ),
-        StreamProvider(
-            create: (context) =>
-                context.read<AuthenticationService>().authStateChanges),
-        //ChangeNotifierProvider(create: (_) => UserProvider())
-      ],
+    return Provider<AuthBase>(
+      create: (context) => Auth(),
       child: MaterialApp(
-        theme: ThemeData(
-            brightness: Brightness.dark,
-            primaryColor: Colors.cyanAccent[400],
-            accentColor: Colors.deepOrange[200]),
-        home: AuthenticationWrapper(),
+        title: 'Flutter Demo',
+        theme: _buildAppTheme(),
+        home: LandingPage(),
       ),
     );
-  }
-}
-
-class AuthenticationWrapper extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final firebaseUser = context.watch<User>();
-
-    if (firebaseUser != null) {
-      return HomePage();
-    } else {
-      //return LoginPage();
-      return AuthScreenView();
-    }
   }
 }

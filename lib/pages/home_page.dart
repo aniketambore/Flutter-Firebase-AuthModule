@@ -1,80 +1,89 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_auth_example/models/user_model.dart';
-import 'package:flutter_auth_example/services/authentication_service.dart';
+import 'package:flutter_auth_example/common_widgets/custom_alert_dialog.dart';
+import 'package:flutter_auth_example/services/auth.dart';
 import 'package:provider/provider.dart';
 
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
+class HomePage extends StatelessWidget {
+  const HomePage({Key? key}) : super(key: key);
 
-class _HomePageState extends State<HomePage> {
-  FirebaseAuth auth = FirebaseAuth.instance;
-  final userRef = Firestore.instance.collection("users");
-  UserModel _currentUser;
-
-  String _uid;
-  String _username;
-  String _email;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    getCurrentUser();
+  Future<void> _signOut(context) async {
+    final auth = Provider.of<AuthBase>(context, listen: false);
+    try {
+      auth.signOut();
+    } catch (e) {
+      // ignore: avoid_print
+      print(e.toString());
+    }
   }
 
-  getCurrentUser() async {
-    UserModel currentUser = await context
-        .read<AuthenticationService>()
-        .getUserFromDB(uid: auth.currentUser.uid);
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final _didRequestSignOut = await CustomAlertDialog(
+      title: "Logout",
+      content: "Are you sure that you want to logout?",
+      defaultActionText: "Logout",
+      cancelActionText: "Cancel",
+    ).show(context);
 
-    _currentUser = currentUser;
+    if (_didRequestSignOut == true) {
+      _signOut(context);
+    }
+  }
 
-    print("${_currentUser.username}");
-
-    setState(() {
-      _uid = _currentUser.uid;
-      _username = _currentUser.username;
-      _email = _currentUser.email;
-    });
+  Widget _buildHomePageContent(UserModel user, BuildContext context) {
+    return Container(
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 50.0,
+                backgroundColor: Colors.cyan[400],
+                child: Text(
+                  user.email.split("")[0].toUpperCase(),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline1!
+                      .copyWith(color: Colors.black),
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text(
+                user.uid,
+                style: TextStyle(color: Colors.white),
+              ),
+              Text(
+                user.email,
+                style: TextStyle(color: Colors.white),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserModel>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
-        title: Text("HomePage"),
-        centerTitle: true,
+        title: const Text(
+          "Home Page",
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.cyan[400],
+        actions: [
+          TextButton(
+              onPressed: () => _confirmSignOut(context),
+              child: const Text(
+                "Logout",
+                style: TextStyle(color: Colors.black, fontSize: 18),
+              ))
+        ],
       ),
-      body: _currentUser == null
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "uid is ${_uid} , email is ${_email}, name is ${_username}",
-                  textAlign: TextAlign.center,
-                ),
-                Center(
-                  child: RaisedButton(
-                    child: Text(
-                      "Logout",
-                      style: TextStyle(color: Colors.black, fontSize: 18),
-                    ),
-                    elevation: 8.0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10))),
-                    color: Colors.orange,
-                    onPressed: () {
-                      context.read<AuthenticationService>().signOut();
-                    },
-                  ),
-                ),
-              ],
-            ),
+      body: _buildHomePageContent(user, context),
     );
   }
 }
